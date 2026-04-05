@@ -4,7 +4,7 @@ def debug_log_pixel_avg(log_file, y, x, avg):
     if avg != 0:
         log_file.write(f"P({y},{x}) Avg: {avg:.2f}\n")
 
-def process_image_binary(item, root_path, radius=2, threshold=130, is_debug=False):
+def process_image_binary(item, root_path, radius=1, threshold=100, is_debug=False):
     if item.status != "preprocess_binary":
         raise ValueError(f"Помилка: {item.relative_path} має статус {item.status}")
 
