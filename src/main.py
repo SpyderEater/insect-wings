@@ -14,7 +14,7 @@ def main_debug(item, root, output_dir):
         (1, 20), (1, 60), (1, 80), (1, 100)
         
         # Радіус 2 (вікно 5х5) - краще прибирає шум, але може "з'їсти" кінчики жилок
-        , (2, 50), (2, 70), (2, 90), (2, 110), (2, 130), (2, 160), (4, 200)
+        , (2, 50), (2, 70), (2, 90), (2, 110), (2, 130), (2, 160)
     ]
     
     print(f"--- RUNNING DEBUG: {item.relative_path} ---")
@@ -39,7 +39,6 @@ def main():
     
     dataset = get_binary_dataset(input_dir)
     
-    # Перевірка аргументів терміналу
     is_debug_mode = len(sys.argv) > 1 and sys.argv[1].lower() == "debug"
 
     for item in dataset.items:
@@ -47,7 +46,7 @@ def main():
             main_debug(item, root, output_dir)
             return
         else:
-            process_image_binary(item, root, radius=3, threshold=80, is_debug=False)
+            process_image_binary(item, root, is_debug=False)
             
             if item.status != "processed_binary":
                 raise ValueError(f"Об'єкт {item.relative_path} має статус {item.status}")
