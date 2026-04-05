@@ -9,14 +9,13 @@ from process_images import process_image_binary
 def main_debug(item, root, output_dir):
     original_pixels = item.pixels.copy()
     
-    # test_cases = [
-    #     # Радіус 1 (вікно 3х3) - швидкий, зберігає дрібні деталі
-    #     (1, 20), (1, 60), (1, 80), (1, 100)
+    test_cases = [
+        # Радіус 1 (вікно 3х3) - швидкий, зберігає дрібні деталі
+        (1, 20), (1, 60), (1, 80), (1, 100)
         
-    #     # Радіус 2 (вікно 5х5) - краще прибирає шум, але може "з'їсти" кінчики жилок
-    #     , (2, 50), (2, 70), (2, 90), (2, 110), (2, 130), (2, 160), (4, 200)
-    # ]
-    test_cases = [ (4, 250) ]
+        # Радіус 2 (вікно 5х5) - краще прибирає шум, але може "з'їсти" кінчики жилок
+        , (2, 50), (2, 70), (2, 90), (2, 110), (2, 130), (2, 160), (4, 200)
+    ]
     
     print(f"--- RUNNING DEBUG: {item.relative_path} ---")
     
@@ -24,7 +23,7 @@ def main_debug(item, root, output_dir):
         item.pixels = original_pixels.copy()
         item.status = "preprocess_binary"
         
-        process_image_binary(item, root, radius=r, threshold=t)
+        process_image_binary(item, root, radius=r, threshold=t, is_debug=True)
         
         debug_name = f"{item.relative_path.stem}_R{r}_T{t}{item.relative_path.suffix}"
         debug_path = output_dir / "debug" / debug_name
@@ -48,7 +47,7 @@ def main():
             main_debug(item, root, output_dir)
             return
         else:
-            process_image_binary(item, root, radius=3, threshold=80)
+            process_image_binary(item, root, radius=3, threshold=80, is_debug=False)
             
             if item.status != "processed_binary":
                 raise ValueError(f"Об'єкт {item.relative_path} має статус {item.status}")
