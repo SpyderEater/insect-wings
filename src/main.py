@@ -1,0 +1,95 @@
+""" main """
+
+from multiprocessing import Pool, cpu_count
+
+import time
+import sys
+from pathlib import Path
+from PIL import Image
+from get_binary_images import get_binary_dataset
+from process_images import process_wrapper, process_image_binary
+
+def main_debug(item, root, output_dir):
+    original_pixels = item.pixels.copy()
+    
+    test_cases = [
+        # Радіус 1 (вікно 3х3) - швидкий, зберігає дрібні деталі
+        (1, 20), (1, 60), (1, 80), (1, 100)
+        
+        # Радіус 2 (вікно 5х5) - краще прибирає шум, але може "з'їсти" кінчики жилок
+        , (2, 50), (2, 70), (2, 90), (2, 110), (2, 130), (2, 160), (4, 200)
+    ]
+    
+    print(f"--- RUNNING DEBUG: {item.relative_path} ---")
+    
+    for r, t in test_cases:
+        item.pixels = original_pixels.copy()
+        item.status = "preprocess_binary"
+        
+        process_image_binary(item, root, radius=r, threshold=t, is_debug=True)
+        
+        debug_name = f"{item.relative_path.stem}_R{r}_T{t}{item.relative_path.suffix}"
+        debug_path = output_dir / "debug" / debug_name
+        debug_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        Image.fromarray(item.pixels).save(debug_path)
+        print(f"Saved variant: R={r}, T={t}")
+
+
+def process_item(item, root):
+    item.status = "preprocess_binary"
+    
+    process_image_binary(item, root, radius=1, threshold=100, is_debug=False)
+    
+    return (item.pixels, item.relative_path)
+
+def main():
+    root = Path(__file__).resolve().parent.parent
+    input_dir = root / "input_images"
+    output_dir = root / "output_images"
+    
+    dataset = get_binary_dataset(input_dir)
+    
+    is_debug_mode = len(sys.argv) > 1 and sys.argv[1].lower() == "debug"
+
+    if is_debug_mode:
+        for item in dataset.items:
+            main_debug(item, root, output_dir)
+        return
+
+    # args_list = [
+    #     (item.pixels.copy(), item.relative_path, root, 1, 80, False)
+    #     for item in dataset.items
+    # ]
+
+    args_list = [(item, root) for item in dataset.items]
+
+    n = int(input("Enter number of threads "))
+
+    print(f"Total images: {len(dataset.items)}")
+
+    # with Pool(cpu_count()) as pool:
+    #     results = pool.map(process_wrapper, args_list)
+
+    start = time.perf_counter()
+
+    with Pool(n) as pool:
+        for i, (pixels, relative_path) in enumerate(pool.starmap(process_item, args_list)):
+            
+            one_img_output_path = output_dir / relative_path
+            one_img_output_path.parent.mkdir(parents=True, exist_ok=True)
+            
+            Image.fromarray(pixels).save(one_img_output_path)
+            
+            print(f"[{i+1}/{len(args_list)}] Done: {relative_path}")
+        
+        # results = pool.imap_unordered(process_wrapper, args_list)
+
+    print(f"Total images: {len(dataset.items)}")
+
+    end = time.perf_counter()
+    print(f"Processing time: {end - start:.2f} seconds")
+
+
+if __name__ == "__main__":
+    main()
