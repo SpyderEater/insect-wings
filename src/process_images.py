@@ -1,8 +1,23 @@
 import numpy as np
 
+class TempItem:
+    pass
+
 def debug_log_pixel_avg(log_file, y, x, avg):
     if avg != 0:
         log_file.write(f"P({y},{x}) Avg: {avg:.2f}\n")
+
+def process_wrapper(args):
+    pixels, relative_path, root, radius, threshold, is_debug = args
+    
+    item = TempItem()
+    item.pixels = pixels
+    item.relative_path = relative_path
+    item.status = "preprocess_binary"
+    
+    result = process_image_binary(item, root, radius, threshold, is_debug)
+    
+    return (result.pixels, result.relative_path)
 
 def process_image_binary(item, root_path, radius=1, threshold=100, is_debug=False):
     if item.status != "preprocess_binary":

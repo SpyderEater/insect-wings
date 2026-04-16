@@ -1,10 +1,12 @@
 """ main """
 
+from multiprocessing import Pool, cpu_count
+
 import sys
 from pathlib import Path
 from PIL import Image
 from get_binary_images import get_binary_dataset
-from process_images import process_image_binary
+from process_images import process_wrapper, process_image_binary
 
 def main_debug(item, root, output_dir):
     original_pixels = item.pixels.copy()
@@ -32,6 +34,9 @@ def main_debug(item, root, output_dir):
         Image.fromarray(item.pixels).save(debug_path)
         print(f"Saved variant: R={r}, T={t}")
 
+
+
+
 def main():
     root = Path(__file__).resolve().parent.parent
     input_dir = root / "input_images"
@@ -39,26 +44,39 @@ def main():
     
     dataset = get_binary_dataset(input_dir)
     
-    # Перевірка аргументів терміналу
     is_debug_mode = len(sys.argv) > 1 and sys.argv[1].lower() == "debug"
 
-    for item in dataset.items:
-        if is_debug_mode:
+    if is_debug_mode:
+        for item in dataset.items:
             main_debug(item, root, output_dir)
-            return
-        else:
-            process_image_binary(item, root, radius=3, threshold=80, is_debug=False)
+        return
+
+    # 🔥 ПАРАЛЕЛІЗАЦІЯ
+    args_list = [
+        (item.pixels, item.relative_path, root, 3, 80, False)
+        for item in dataset.items
+    ]
+
+    print(f"Total images: {len(dataset.items)}")
+
+    # with Pool(cpu_count()) as pool:
+    #     results = pool.map(process_wrapper, args_list)
+
+    with Pool(4) as pool:
+        for i, (pixels, relative_path) in enumerate(pool.imap_unordered(process_wrapper, args_list)):
             
-            if item.status != "processed_binary":
-                raise ValueError(f"Об'єкт {item.relative_path} має статус {item.status}")
-            
-            one_img_output_path = output_dir / item.relative_path
+            one_img_output_path = output_dir / relative_path
             one_img_output_path.parent.mkdir(parents=True, exist_ok=True)
             
-            Image.fromarray(item.pixels).save(one_img_output_path)
+            Image.fromarray(pixels).save(one_img_output_path)
             
-            item.status = "processed_image"
-            print(f"Status: {item.status} | {item.relative_path}")
+            print(f"[{i+1}/{len(args_list)}] Done: {relative_path}")
+        
+        # results = pool.imap_unordered(process_wrapper, args_list)
+
+    print(f"Total images: {len(dataset.items)}")
+
+  
 
 if __name__ == "__main__":
     main()
