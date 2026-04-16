@@ -2,6 +2,7 @@
 
 from multiprocessing import Pool, cpu_count
 
+import time
 import sys
 from pathlib import Path
 from PIL import Image
@@ -35,7 +36,12 @@ def main_debug(item, root, output_dir):
         print(f"Saved variant: R={r}, T={t}")
 
 
-
+def process_item(item, root):
+    item.status = "preprocess_binary"
+    
+    process_image_binary(item, root, radius=1, threshold=100, is_debug=False)
+    
+    return (item.pixels, item.relative_path)
 
 def main():
     root = Path(__file__).resolve().parent.parent
@@ -51,19 +57,24 @@ def main():
             main_debug(item, root, output_dir)
         return
 
-    # 🔥 ПАРАЛЕЛІЗАЦІЯ
-    args_list = [
-        (item.pixels, item.relative_path, root, 3, 80, False)
-        for item in dataset.items
-    ]
+    # args_list = [
+    #     (item.pixels.copy(), item.relative_path, root, 1, 80, False)
+    #     for item in dataset.items
+    # ]
+
+    args_list = [(item, root) for item in dataset.items]
+
+    n = int(input("Enter number of threads "))
 
     print(f"Total images: {len(dataset.items)}")
 
     # with Pool(cpu_count()) as pool:
     #     results = pool.map(process_wrapper, args_list)
 
-    with Pool(4) as pool:
-        for i, (pixels, relative_path) in enumerate(pool.imap_unordered(process_wrapper, args_list)):
+    start = time.perf_counter()
+
+    with Pool(n) as pool:
+        for i, (pixels, relative_path) in enumerate(pool.starmap(process_item, args_list)):
             
             one_img_output_path = output_dir / relative_path
             one_img_output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -76,7 +87,9 @@ def main():
 
     print(f"Total images: {len(dataset.items)}")
 
-  
+    end = time.perf_counter()
+    print(f"Processing time: {end - start:.2f} seconds")
+
 
 if __name__ == "__main__":
     main()
