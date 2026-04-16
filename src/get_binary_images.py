@@ -42,7 +42,7 @@ def get_binary_dataset(current_path, input_root=None):
             if initial_status != "preprocess_image":
                 raise ValueError(f"Файл {img_path.name} вже має статус {initial_status}")
 
-            img = Image.open(img_path).convert('L')
+            img = Image.open(img_path).convert('RGB')
             binary_pixels = create_mask(np.array(img))
             
             binary_obj = BinaryImage(
