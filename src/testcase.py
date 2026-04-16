@@ -71,7 +71,7 @@ def main():
 
             Image.fromarray(pixels).save(output_path)
 
-            print(f"[{i+1}/{len(args_list)}] {relative_path} | R={r} T={t} | ⏱ {elapsed:.3f}s")
+            print(f"[{i+1}/{len(args_list)}] {relative_path} | R={r} T={t} | {elapsed:.3f}s")
 
 
 if __name__ == "__main__":
