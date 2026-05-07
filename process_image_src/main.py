@@ -45,16 +45,21 @@ def main_debug(item, root, output_dir):
         Image.fromarray(item.pixels).save(debug_path)
         print(f"Saved variant: R={r}, T={t}")
 
+import time
+
 def process_item(item, root):
     from process_images import process_image_binary
+    import os
     
-    pid = os.getpid()
-    print(f"--- [Process {pid}] Started: {item.relative_path.name}")
+    start_all = time.time()
     
-    item.status = "preprocess_binary"
+    start_cpp = time.time()
     process_image_binary(item, root, radius=1, threshold=100, is_debug=False)
+    end_cpp = time.time()
     
-    return (item.pixels, item.relative_path, pid)
+    print(f"--- [PID {os.getpid()}] CPP took: {end_cpp - start_cpp:.4f}s | Total: {time.time() - start_all:.4f}s")
+    
+    return (item.pixels, item.relative_path, os.getpid())
 
 def main():
     args = [a.lower() for a in sys.argv]

@@ -1,6 +1,6 @@
 import numpy as np
 
-def process_image_binary(item, root_path, radius=1, threshold=100, is_debug=False):
+def process_image_binary(item, root_path, radius=2, threshold=140, is_debug=False):
     import image_processor
 
     if item.status != "preprocess_binary":
