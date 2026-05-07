@@ -18,10 +18,8 @@ void process_image_cpp(py::array_t<uint8_t> input, py::array_t<uint8_t> output, 
 
     tbb::parallel_for(tbb::blocked_range2d<int>(radius, height - radius, radius, width - radius),
         [&](const tbb::blocked_range2d<int>& r) {
-            
             for (int y = r.rows().begin(); y < r.rows().end(); ++y) {
                 const int row_offset = y * width;
-                
                 for (int x = r.cols().begin(); x < r.cols().end(); ++x) {
                     int sum = 0;
 
@@ -31,7 +29,6 @@ void process_image_cpp(py::array_t<uint8_t> input, py::array_t<uint8_t> output, 
                             sum += ptr_in[neighbor_row + (x + kx)];
                         }
                     }
-
                     ptr_out[row_offset + x] = ((float)sum / window_size > threshold_val) ? 255 : 0;
                 }
             }
