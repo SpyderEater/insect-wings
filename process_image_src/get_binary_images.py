@@ -1,9 +1,8 @@
 """ get images """
 
 import numpy as np
-from PIL import Image
-from scipy.ndimage import uniform_filter
 from pathlib import Path
+import cv2
 
 class BinaryImage:
     def __init__(self, pixels, relative_path, status="preprocess_image"):
@@ -20,7 +19,7 @@ class BinaryDataset:
         self.items.extend(other_dataset.items)
 
 def create_mask(pixels, w=25, c=10):
-    local_mean = uniform_filter(pixels.astype(np.float32), size=w)
+    local_mean = cv2.blur(pixels.astype(np.float32), (w, w))
     return np.where(pixels > (local_mean - c), 255, 0).astype(np.uint8)
 
 def get_binary_dataset(current_path, input_root=None):
@@ -35,15 +34,16 @@ def get_binary_dataset(current_path, input_root=None):
     
     if image_files:
         for img_path in image_files:
-            # Створюємо базовий об'єкт для перевірки початкового стану
-            # Тут ми імітуємо перевірку: якщо файл існує і це картинка, статус "preprocess_image"
+
             initial_status = "preprocess_image"
             
             if initial_status != "preprocess_image":
                 raise ValueError(f"Файл {img_path.name} вже має статус {initial_status}")
 
-            img = Image.open(img_path).convert('RGB')
-            binary_pixels = create_mask(np.array(img))
+
+
+            img_gray = cv2.imread(str(img_path), cv2.IMREAD_GRAYSCALE)
+            binary_pixels = create_mask(img_gray)
             
             binary_obj = BinaryImage(
                 pixels=binary_pixels, 
